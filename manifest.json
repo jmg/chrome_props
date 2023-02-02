@@ -1,0 +1,13 @@
+{
+    "name": "Zona props",
+    "version": "1.0",
+    "manifest_version": 3,
+    "content_scripts": [
+        {
+            "matches": [
+                "*://www.zonaprop.com.ar/*"
+            ],
+            "js": ["content.js"]
+        }
+    ]
+}
