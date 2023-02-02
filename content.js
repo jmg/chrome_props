@@ -1,4 +1,17 @@
-function main() {
+async function getDollarValue() {
+    const url = "https://api.bluelytics.com.ar/v2/latest"
+    const response = await fetch(url, {
+        method: "GET" // default, so we can ignore
+    })
+    const data = await response.json()
+    return data.blue.value_avg
+}
+
+function round(num, decimals) {
+    return (Math.round(num * 100) / 100).toFixed(decimals)
+}
+
+function main(dollar) {
 
     const posts = document.querySelectorAll(".postings-container div")
 
@@ -7,11 +20,22 @@ function main() {
         const features = post.querySelector("div[data-qa='POSTING_CARD_FEATURES']")
         const priceDiv = post.querySelector("div[data-qa='POSTING_CARD_PRICE']")
         let price = 0
-        let area = 0
+        let total_meters = 0
+        let covered_meters = 0
+        let isDollar = true
 
         try {
+            if (priceDiv.innerText.includes("$")) {
+                isDollar = false
+            }
+
             const priceStr = priceDiv.innerText.replace("USD", "").replace("$", "").replaceAll(".", "").trim()
             price = parseFloat(priceStr)
+
+            if (!isDollar) {
+                price = price / dollar
+            }
+
         } catch (e) {
             return
         }
@@ -24,17 +48,53 @@ function main() {
 
                 try {
                     const areaStr = featureList[0].innerText.replace("m²", "").trim()
-                    area = parseFloat(areaStr)
+                    total_meters = parseFloat(areaStr)
                 } catch (e) {
                     return
                 }
 
-                if (area !== 0 && price !== 0 && area !== NaN && price !== NaN) {
-                    const pricePerMeter = price / area
-                    const pricePerMeterRounded = (Math.round(pricePerMeter * 100) / 100).toFixed(2);
+                try {
+                    const coveredAreaStr = featureList[2].innerText.replace("m²", "").trim()
+                    covered_meters = parseFloat(coveredAreaStr)
+                } catch (e) {
+                    return
+                }
 
-                    if (features.querySelectorAll(".price-per-meter").length === 0) {
-                        features.innerHTML += `<span class='price-per-meter' style="color: blue; font-weight: bold;">$${pricePerMeterRounded}</span>`
+                if (total_meters !== 0 && price !== 0 && total_meters !== NaN && price !== NaN) {
+
+                    const COEFICIENT = 0.40
+
+                    const uncovered_meters = total_meters - covered_meters
+
+                    const price_calculation_unrounded = price / (covered_meters + uncovered_meters * COEFICIENT)
+
+                    const price_calculation = round(price_calculation_unrounded, 2)
+
+                    if (features.parentElement.querySelectorAll(".price-per-meter").length === 0) {
+
+                        let calcStr = price_calculation
+                        if (price_calculation < 500) {
+                            //alquiler
+                            calcStr = "$" + (price_calculation * dollar).toFixed(2) + " (" + price_calculation + " USD)"
+                        } else {
+                            calcStr = price_calculation + " USD"
+                        }
+
+                        let addedHtml = `<div style="color: blue; font-weight: bold;">
+                            ${calcStr}
+                        </div>`
+
+                        if (price_calculation < 500) {
+                            //alquiler
+                            const pricePerYear = price * 12
+                            const calc4percent = round(pricePerYear / 0.04 / 1000, 2)
+                            const calc3percent = round(pricePerYear / 0.03 / 1000, 2)
+
+                            addedHtml += `<div style="margin-top: 5px; color: black; font-weight: bold;">4%: ${calc4percent}K</div>`
+                            addedHtml += `<div style="margin-top: 5px; color: black; font-weight: bold;">3%: ${calc3percent}K</div>`
+                        }
+
+                        features.parentElement.innerHTML += "<div style='margin-left: 15px' class='price-per-meter'>" + addedHtml + "</div>"
                     }
                 }
             }
@@ -42,4 +102,14 @@ function main() {
     })
 }
 
-setInterval(main, 1000)
+let dollar = null
+
+async function mainAsync() {
+
+    if (dollar === null) {
+        dollar = await getDollarValue()
+    }
+    main(dollar)
+}
+
+setInterval(mainAsync, 1000)
