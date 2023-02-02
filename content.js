@@ -87,11 +87,17 @@ function main(dollar) {
                         if (price_calculation < 500) {
                             //alquiler
                             const pricePerYear = price * 12
-                            const calc4percent = round(pricePerYear / 0.04 / 1000, 2)
-                            const calc3percent = round(pricePerYear / 0.03 / 1000, 2)
 
-                            addedHtml += `<div style="margin-top: 5px; color: black; font-weight: bold;">4%: ${calc4percent}K</div>`
-                            addedHtml += `<div style="margin-top: 5px; color: black; font-weight: bold;">3%: ${calc3percent}K</div>`
+                            const at3Percent = pricePerYear / 0.03
+                            const at4Percent = pricePerYear / 0.04
+
+                            const rentIf3Percent = round(at4Percent * 0.03 / 12 * dollar, 2)
+
+                            const calc4percent = round(at4Percent / 1000, 2)
+                            const calc3percent = round(at3Percent / 1000, 2)
+
+                            addedHtml += `<div style="margin-top: 5px; color: black; font-weight: bold;">4%: ${calc4percent}K - ($${rentIf3Percent / 1000}K)</div>`
+                            addedHtml += `<div style="margin-top: 5px; color: black; font-weight: bold;">3%: ${calc3percent}K </div>`
                         }
 
                         features.parentElement.innerHTML += "<div style='margin-left: 15px' class='price-per-meter'>" + addedHtml + "</div>"
