@@ -13,12 +13,26 @@ function round(num, decimals) {
 
 function main(dollar) {
 
-    const posts = document.querySelectorAll(".postings-container div")
+    let posts = document.querySelectorAll(".postings-container div")
+    let isFavorites = false
+
+    if (posts.length == 0) {
+        posts = document.querySelectorAll(".sc-bblaLu div")
+        isFavorites = true
+    }
 
     posts.forEach(post => {
 
-        const features = post.querySelector("div[data-qa='POSTING_CARD_FEATURES']")
-        const priceDiv = post.querySelector("div[data-qa='POSTING_CARD_PRICE']")
+        let features = post.querySelector("div[data-qa='POSTING_CARD_FEATURES']")
+        if (features === null) {
+            features = post.querySelector(".sc-jyQkQA")
+        }
+
+        let priceDiv = post.querySelector("div[data-qa='POSTING_CARD_PRICE']")
+        if (priceDiv === null) {
+            priceDiv = post.querySelector(".sc-cwhdKE")
+        }
+
         let price = 0
         let total_meters = 0
         let covered_meters = 0
@@ -58,6 +72,10 @@ function main(dollar) {
                     covered_meters = parseFloat(coveredAreaStr)
                 } catch (e) {
                     return
+                }
+
+                if (isFavorites) {
+                    covered_meters = total_meters
                 }
 
                 if (total_meters !== 0 && price !== 0 && total_meters !== NaN && price !== NaN) {
